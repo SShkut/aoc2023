@@ -79,7 +79,7 @@ impl<'a> Game<'a> {
             .flat_map(|round| round.calculate_round())
             .any(|cube| {
                 cube.amount
-                    > *threshold
+                    > threshold
                         .get(&cube.color)
                         .expect("Should be a correct color")
             })
