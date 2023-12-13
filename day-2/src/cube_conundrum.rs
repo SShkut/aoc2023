@@ -1,4 +1,8 @@
-use std::{collections::{BTreeSet, BTreeMap}, ops::Not, str::FromStr};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    ops::Not,
+    str::FromStr,
+};
 
 use nom::{
     bytes::complete::tag,
@@ -88,14 +92,36 @@ impl<'a> Game<'a> {
     }
 }
 
-pub fn process(data: &str) -> u32 {
+pub fn process_day1(data: &str) -> u32 {
     let (_, games) = parse_game(data).expect("Should parse.");
-    let threshold = BTreeMap::from([(Color::Red, 12),(Color::Green, 13), (Color::Blue, 14)]);
+    let threshold = BTreeMap::from([(Color::Red, 12), (Color::Green, 13), (Color::Blue, 14)]);
 
     games
         .iter()
         .filter_map(|game| game.get_valid_game_id(&threshold))
         .sum()
+}
+
+pub fn process_day2(data: &str) -> u32 {
+    let (_, games) = parse_game(data).expect("Sould parse.");
+    let mut fewest_score: Vec<u32> = Vec::new();
+    for game in games {
+        let mut red_max = 1;
+        let mut blue_max = 1;
+        let mut green_max = 1;
+        for round in game.rounds {
+            for cube in round.cubes {
+                match cube.color {
+                    Color::Blue => blue_max = blue_max.max(cube.amount),
+                    Color::Red => red_max = red_max.max(cube.amount),
+                    Color::Green => green_max = green_max.max(cube.amount),
+                }
+            }
+        }
+        fewest_score.push(red_max * green_max * blue_max);
+    }
+
+    fewest_score.into_iter().sum()
 }
 
 fn cube(input: &str) -> IResult<&str, Cube> {
@@ -138,7 +164,24 @@ Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
         let expected = 1 + 2 + 5;
-        let result = process(&data);
+        let result = process_day1(&data);
         assert_eq!(expected, result);
     }
+}
+
+#[test]
+fn test_process_part2() {
+    let data = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+    let first_game = 4 * 2 * 6;
+    let second_game = 4 * 3 * 1;
+    let third_game = 20 * 13 * 6;
+    let fourth_geme = 14 * 3 * 15;
+    let fifth_game = 6 * 3 * 2;
+    let expected = first_game + second_game + third_game + fourth_geme + fifth_game;
+    let result = process_day2(&data);
+    assert_eq!(expected, result);
 }
