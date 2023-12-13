@@ -104,24 +104,20 @@ pub fn process_day1(data: &str) -> u32 {
 
 pub fn process_day2(data: &str) -> u32 {
     let (_, games) = parse_game(data).expect("Sould parse.");
-    let mut fewest_score: Vec<u32> = Vec::new();
-    for game in games {
-        let mut red_max = 1;
-        let mut blue_max = 1;
-        let mut green_max = 1;
-        for round in game.rounds {
-            for cube in round.cubes {
-                match cube.color {
-                    Color::Blue => blue_max = blue_max.max(cube.amount),
-                    Color::Red => red_max = red_max.max(cube.amount),
-                    Color::Green => green_max = green_max.max(cube.amount),
-                }
-            }
-        }
-        fewest_score.push(red_max * green_max * blue_max);
-    }
-
-    fewest_score.into_iter().sum()
+    games
+        .iter()
+        .map(|game| {
+            game.rounds
+                .iter()
+                .flat_map(|round| round.cubes.iter())
+                .fold((1, 1, 1), |(red, green, blue), cube| match cube.color {
+                    Color::Red => (red.max(cube.amount), green, blue),
+                    Color::Green => (red, green.max(cube.amount), blue),
+                    Color::Blue => (red, green, blue.max(cube.amount)),
+                })
+        })
+        .map(|(red, green, blue)| red * green * blue)
+        .sum()
 }
 
 fn cube(input: &str) -> IResult<&str, Cube> {
